@@ -6,8 +6,8 @@ import { generateRandomPassword } from "../../../services/generateRandomPassword
 import sendMail from "../../../services/nodemailer";
 
 interface ITeacherPassword {
-  teacherId: string;
-  plainPassword: string;
+  id: string;
+  teacherName: string;
   teacherEmail: string;
   createdAt: string;
 }
@@ -111,14 +111,15 @@ courseId
       `SELECT id,teacherEmail FROM teacher_${instituteNumber} ORDER BY id DESC LIMIT 1`,
       { type: QueryTypes.SELECT },
     );
+    console.log(insertedTeacher);
 
     // Save plain password in admin table
     await sequelize.query(
-      `INSERT INTO teacher_password_admin(teacherId, plainPassword, teacherEmail) VALUES (?, ?)`,
+      `INSERT INTO teacher_password_admin(teacherId, plainPassword, teacherEmail) VALUES (?, ?,?)`,
       {
         type: QueryTypes.INSERT,
         replacements: [
-          insertedTeacher.teacherId,
+          insertedTeacher.id,
           data.plainVersion,
           insertedTeacher.teacherEmail,
         ],
@@ -174,7 +175,7 @@ export const getTeacherPasswords = async (
     // Fetch teacher passwords for admin dashboard
     const teacherPasswords: ITeacherPassword[] =
       await sequelize.query<ITeacherPassword>(
-        `SELECT t.id as teacherId, p.plainPassword
+        `SELECT t.id as teacherId, p.plainPassword,t.teacherEmail,p.createdAt
        FROM teacher_${instituteNumber} t
        JOIN teacher_password_admin p ON t.id = p.teacherId`,
         {
